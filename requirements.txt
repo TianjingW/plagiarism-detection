@@ -1,5 +1,8 @@
 chardet==5.1.0
+<<<<<<< HEAD
 numpy==1.24.3
+=======
+>>>>>>> 9d29361 (small fixes)
 odfpy==1.4.1
 tqdm==4.64.1
 tzlocal==4.2

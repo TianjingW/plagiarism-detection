@@ -10,7 +10,11 @@ from io import BytesIO
 from typing import Optional, List, Tuple, Iterable
 import tokenize
 import keyword
+<<<<<<< HEAD
 
+=======
+from rkr_gst import run
+>>>>>>> 9d29361 (small fixes)
 import chardet
 
 
@@ -23,6 +27,41 @@ class LexMode(Enum):
         return self.value
 
 
+<<<<<<< HEAD
+=======
+class MatchMethod(Enum):
+    LCS = 'lcs'
+    GST = 'gst'
+    RKR_GST = 'rkr-gst'
+
+
+def initialize_status(tokens):
+    return [[token, False] for token in tokens]
+
+
+def compare_token(tokens1, tokens2, line_1_num, line_2_num, same_tokens):
+    try:
+        if tokens1[line_1_num + same_tokens] == tokens2[line_2_num + same_tokens]:
+            if not(tokens1[line_1_num + same_tokens][1] and tokens2[line_2_num + same_tokens][1]):
+                return True
+    except:
+        return False
+    return False
+
+
+def check_same_length_match(matches, line_1_num, line_2_num):
+    for line_3_num, match in enumerate(matches):
+        match_line_1_start = match[0]
+        match_line_2_start = match[1]
+        match_len = match[2]
+        if match_line_1_start <= line_1_num <= (match_line_1_start + match_len - 1):
+            return False
+        if match_line_2_start <= line_2_num <= (match_line_2_start + match_len - 1):
+            return False
+    return True
+
+
+>>>>>>> 9d29361 (small fixes)
 @dataclasses.dataclass()
 class PythonSource:
     """
@@ -41,7 +80,11 @@ class PythonSource:
 
     @property
     def id_repr(self) -> str:
+<<<<<<< HEAD
         return \
+=======
+        return\
+>>>>>>> 9d29361 (small fixes)
             "%s[%02d]" % (
                 self.file_name,
                 self.file_index) if self.file_index is not None else self.file_name
@@ -50,6 +93,7 @@ class PythonSource:
             self,
             other: 'PythonSource',
             minimal_match_length: int,
+<<<<<<< HEAD
             consider_reordered: bool = True
     ) -> Optional[float]:
         """Tells, what fraction of current source was (if it was)
@@ -57,10 +101,17 @@ class PythonSource:
 
         # Trivial cases
 
+=======
+            match_method: MatchMethod
+    ) -> Optional[float]:
+        """Tells, what fraction of current source was (if it was)
+        likely borrowed from another one"""
+>>>>>>> 9d29361 (small fixes)
         if self is other or self.id_repr == other.id_repr:
             return None
         elif self.fingerprint_lexemes == other.fingerprint_lexemes:
             return 1.0
+<<<<<<< HEAD
 
         # Invoke LCS until nothing is borrowed
 
@@ -111,6 +162,77 @@ class PythonSource:
         """
 
         return float(common_size / len(self.fingerprint_lexemes))
+=======
+        if match_method == MatchMethod.GST:
+            tokens_sequence_1 = self.fingerprint_lexemes.copy()
+            tokens_sequence_2 = other.fingerprint_lexemes.copy()
+            total_score = 0
+            tokens_1 = initialize_status(tokens_sequence_1)
+            tokens_2 = initialize_status(tokens_sequence_2)
+            if len(tokens_2) < len(tokens_1):
+                tokens_1, tokens_2 = tokens_2, tokens_1
+
+            max_min = True
+
+            while max_min:
+                max_match = minimal_match_length
+                matches = []
+                for line_1_num, [_, is_match_1] in enumerate(tokens_1):
+                    if not is_match_1:
+                        for line_2_num, [_, is_match_2] in enumerate(tokens_2):
+                            if not is_match_2:
+                                same_tokens = 0
+                                while compare_token(tokens_1, tokens_2, line_1_num, line_2_num, same_tokens):
+                                    same_tokens += 1
+                                if same_tokens == max_match:
+                                    if check_same_length_match(matches, line_1_num, line_2_num):
+                                        matches.append([line_1_num, line_2_num, same_tokens])
+                                elif same_tokens > max_match:
+                                    max_match = same_tokens
+                                    matches = [[line_1_num, line_2_num, same_tokens]]
+
+                for match in matches:
+                    for enumerate_length in range(match[2]):
+                        tokens_1[match[0] + enumerate_length][1] = True
+                        tokens_2[match[1] + enumerate_length][1] = True
+
+                    total_score += match[2]
+                if max_match <= minimal_match_length:
+                    max_min = False
+            return float(total_score / len(self.fingerprint_lexemes))
+        elif match_method == MatchMethod.LCS:
+            self_marker = '\uE001'
+            other_marker = '\uE002'
+            self_lexemes = self.fingerprint_lexemes.copy()
+            other_lexemes = other.fingerprint_lexemes.copy()
+            common_size = 0
+            resultative = True
+            while resultative:
+                sm = difflib.SequenceMatcher(
+                    None,
+                    self_lexemes,
+                    other_lexemes,
+                    False
+                )  # type: ignore
+
+                resultative = False
+                for b in sm.get_matching_blocks():
+                    self_index, other_index, match_size = tuple(b)
+                    if match_size >= minimal_match_length:
+                        resultative = True
+                        common_size += match_size
+                        self_lexemes[self_index: self_index + match_size] = [self_marker] * match_size
+                        other_lexemes[other_index: other_index + match_size] = [other_marker] * match_size
+            return float(common_size / len(self.fingerprint_lexemes))
+        elif match_method == MatchMethod.RKR_GST:
+            tokens_sequence_1 = self.fingerprint_lexemes.copy()
+            tokens_sequence_2 = other.fingerprint_lexemes.copy()
+            res = run(' '.join(tokens_sequence_1), ' '.join(tokens_sequence_2), minimal_match_length)
+            return min(res, 1)
+        else:
+            raise ValueError(
+                "Match method %s not implemented for Python sources" % match_method.value)
+>>>>>>> 9d29361 (small fixes)
 
     @staticmethod
     def _lex_python_source(
