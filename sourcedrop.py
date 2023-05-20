@@ -10,11 +10,7 @@ from io import BytesIO
 from typing import Optional, List, Tuple, Iterable
 import tokenize
 import keyword
-<<<<<<< HEAD
-
-=======
 from rkr_gst import run
->>>>>>> 9d29361 (small fixes)
 import chardet
 
 
@@ -27,8 +23,6 @@ class LexMode(Enum):
         return self.value
 
 
-<<<<<<< HEAD
-=======
 class MatchMethod(Enum):
     LCS = 'lcs'
     GST = 'gst'
@@ -61,7 +55,6 @@ def check_same_length_match(matches, line_1_num, line_2_num):
     return True
 
 
->>>>>>> 9d29361 (small fixes)
 @dataclasses.dataclass()
 class PythonSource:
     """
@@ -80,11 +73,7 @@ class PythonSource:
 
     @property
     def id_repr(self) -> str:
-<<<<<<< HEAD
-        return \
-=======
         return\
->>>>>>> 9d29361 (small fixes)
             "%s[%02d]" % (
                 self.file_name,
                 self.file_index) if self.file_index is not None else self.file_name
@@ -93,76 +82,14 @@ class PythonSource:
             self,
             other: 'PythonSource',
             minimal_match_length: int,
-<<<<<<< HEAD
-            consider_reordered: bool = True
-    ) -> Optional[float]:
-        """Tells, what fraction of current source was (if it was)
-        likely borrowed from another one"""
-
-        # Trivial cases
-
-=======
             match_method: MatchMethod
     ) -> Optional[float]:
         """Tells, what fraction of current source was (if it was)
         likely borrowed from another one"""
->>>>>>> 9d29361 (small fixes)
         if self is other or self.id_repr == other.id_repr:
             return None
         elif self.fingerprint_lexemes == other.fingerprint_lexemes:
             return 1.0
-<<<<<<< HEAD
-
-        # Invoke LCS until nothing is borrowed
-
-        # Markers from unicode provate use area,
-        # will never occur in source code
-        self_marker = '\uE001'
-        other_marker = '\uE002'
-
-        self_lexemes = self.fingerprint_lexemes.copy()
-        other_lexemes = other.fingerprint_lexemes.copy()
-
-        common_size = 0
-
-        resultative = True
-        while resultative:
-            sm = difflib.SequenceMatcher(
-                None,
-                self_lexemes,
-                other_lexemes,
-                False
-            )  # type: ignore
-
-            resultative = False
-            for b in sm.get_matching_blocks():
-                self_index, other_index, match_size = tuple(b)
-                if match_size >= minimal_match_length:
-                    # Found something, will try next time
-                    # if we consider reordered plagiarism
-                    resultative = consider_reordered
-
-                    # Take the match into account
-                    common_size += match_size
-
-                    # Make the match different
-                    self_lexemes[self_index: self_index + match_size] = [self_marker] * match_size
-                    other_lexemes[other_index: other_index + match_size] = [other_marker] * match_size
-
-        """
-        sm = difflib.SequenceMatcher(
-            None,
-            self.fingerprint_lexemes,
-            other.fingerprint_lexemes,
-            False
-        )  # type: ignore
-
-        common_size = sum(b.size for b in sm.get_matching_blocks()
-                          if b.size >= minimal_match_length)
-        """
-
-        return float(common_size / len(self.fingerprint_lexemes))
-=======
         if match_method == MatchMethod.GST:
             tokens_sequence_1 = self.fingerprint_lexemes.copy()
             tokens_sequence_2 = other.fingerprint_lexemes.copy()
@@ -232,7 +159,6 @@ class PythonSource:
         else:
             raise ValueError(
                 "Match method %s not implemented for Python sources" % match_method.value)
->>>>>>> 9d29361 (small fixes)
 
     @staticmethod
     def _lex_python_source(

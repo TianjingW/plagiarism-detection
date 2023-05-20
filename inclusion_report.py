@@ -10,21 +10,14 @@ import argparse
 import multiprocessing
 import multiprocessing.dummy
 import subprocess
-<<<<<<< HEAD
-=======
 import time
->>>>>>> 9d29361 (small fixes)
 from collections import Counter
 from typing import List, Iterable, Tuple, Optional
 
 import tzlocal
 import tqdm
 
-<<<<<<< HEAD
-from sourcedrop import LexMode, PythonSource
-=======
 from sourcedrop import LexMode, PythonSource, MatchMethod
->>>>>>> 9d29361 (small fixes)
 import report_export
 from whoosh.analysis import KeywordAnalyzer
 from whoosh.filedb.filestore import FileStorage
@@ -83,10 +76,7 @@ def globs(path: str, min_date: Optional[datetime.datetime]) -> List[str]:
         output: subprocess.Popen = subprocess.Popen(
             ['flake8', filename], stdout=subprocess.PIPE
         )
-<<<<<<< HEAD
-        output.wait(5.0)
-=======
->>>>>>> 9d29361 (small fixes)
+        output.wait(20.0)
         res = output.communicate()[0].decode(locale.getpreferredencoding(False)).strip()
         if len(res) > 0:
             print(res)
@@ -113,10 +103,6 @@ def get_python_sources(
 
 
 def get_args() -> argparse.Namespace:
-<<<<<<< HEAD
-
-=======
->>>>>>> 9d29361 (small fixes)
     # Thanks to https://gist.github.com/monkut/e60eea811ef085a6540f
     def valid_date_type(arg_date_str):
         """custom argparse *date* type for user dates values given from the command line"""
@@ -157,8 +143,6 @@ def get_args() -> argparse.Namespace:
         choices=list(LexMode)
     )
     apr.add_argument(
-<<<<<<< HEAD
-=======
         "-mam",
         "--match-method",
         type=MatchMethod,
@@ -167,7 +151,6 @@ def get_args() -> argparse.Namespace:
         choices=list(MatchMethod)
     )
     apr.add_argument(
->>>>>>> 9d29361 (small fixes)
         "-ml",
         "--min-length",
         help="Minimal number of tokens in source to take it in account",
@@ -186,11 +169,7 @@ def get_args() -> argparse.Namespace:
         "--min-match-length",
         help="Minimal length of text fragment to take in account",
         type=int,
-<<<<<<< HEAD
-        default=5
-=======
         default=1
->>>>>>> 9d29361 (small fixes)
     )
     apr.add_argument(
         "-mbfd",
@@ -219,16 +198,6 @@ def _is_same_guy(bad_filename: str, good_filename: str,
                  bad_root: str, good_root: str) -> bool:
     """If files belong to the same guy to skip the check"""
 
-<<<<<<< HEAD
-    bad_root = os.path.normpath(bad_root).\
-        lstrip(os.path.sep).rstrip(os.path.sep)
-    good_root = os.path.normpath(good_root).\
-        lstrip(os.path.sep).rstrip(os.path.sep)
-
-    bad_filename = os.path.normpath(bad_filename).\
-        lstrip(os.path.sep).rstrip(os.path.sep)
-    good_filename = os.path.normpath(good_filename).\
-=======
     bad_root = os.path.normpath(bad_root). \
         lstrip(os.path.sep).rstrip(os.path.sep)
     good_root = os.path.normpath(good_root). \
@@ -237,7 +206,6 @@ def _is_same_guy(bad_filename: str, good_filename: str,
     bad_filename = os.path.normpath(bad_filename). \
         lstrip(os.path.sep).rstrip(os.path.sep)
     good_filename = os.path.normpath(good_filename). \
->>>>>>> 9d29361 (small fixes)
         lstrip(os.path.sep).rstrip(os.path.sep)
 
     bad_filename = bad_filename.replace(bad_root + os.path.sep, '')
@@ -251,21 +219,12 @@ _minimal_match_length: int = 0
 
 
 def compare_srcs(
-<<<<<<< HEAD
-        settings_bad_good: Tuple[PythonSource, PythonSource, float]
-) -> Tuple[str, str, Optional[float], float]:
-    global _minimal_match_length
-    bad, good, search_score = settings_bad_good
-    borrowed_fraction = bad.borrowed_fraction_from(
-        good, _minimal_match_length)
-=======
         settings_bad_good: Tuple[PythonSource, PythonSource, float, MatchMethod]
 ) -> Tuple[str, str, Optional[float], float]:
     global _minimal_match_length
     bad, good, search_score, match_method = settings_bad_good
     borrowed_fraction = bad.borrowed_fraction_from(
         good, _minimal_match_length, match_method)
->>>>>>> 9d29361 (small fixes)
     return bad.id_repr, good.id_repr, borrowed_fraction, search_score
 
 
@@ -293,17 +252,6 @@ def workflow():
 
     writer = ix.writer()
 
-<<<<<<< HEAD
-    borrow_threshold: float = args.borrow_threshold    # type: ignore
-    check_method: LexMode = args.check_method          # type: ignore
-    minimal_match_length: int = args.min_match_length  # type: ignore
-
-    gs = globs(args.good_guys, None)  # type: ignore
-    bs = globs(args.bad_guys, args.min_bad_file_date)   # type: ignore
-
-    ml = args.min_length
-    wt = args.whoosh_threshold
-=======
     borrow_threshold: float = args.borrow_threshold  # type: ignore
     check_method: LexMode = args.check_method  # type: ignore
     minimal_match_length: int = args.min_match_length  # type: ignore
@@ -314,7 +262,6 @@ def workflow():
     ml = args.min_length
     wt = args.whoosh_threshold
     match_method = args.match_method
->>>>>>> 9d29361 (small fixes)
 
     print("Looking for them...")
     good_sources = list(get_python_sources(gs, ml, check_method))
@@ -324,11 +271,7 @@ def workflow():
         writer.add_document(title=g.file_name, content=' '.join(g.fingerprint_lexemes))
         good_sources_dict[g.file_name] = g
     writer.commit()
-<<<<<<< HEAD
-    tasks: List[Tuple[PythonSource, PythonSource, float]] = []
-=======
     tasks: List[Tuple[PythonSource, PythonSource, float, MatchMethod]] = []
->>>>>>> 9d29361 (small fixes)
 
     total_comparisons: int = 0
     done_comparisons: int = 0
@@ -341,17 +284,10 @@ def workflow():
             for index, res in enumerate(results):
                 g = good_sources_dict[res['title']]
                 if index <= wt * len(good_sources) and (not _is_same_guy(b.file_name, g.file_name, args.bad_guys, args.good_guys)):
-<<<<<<< HEAD
-                    tasks.append((b, g, res.score))
-                    total_comparisons += 1
-    print("Inquiring them...")
-
-=======
                     tasks.append((b, g, res.score, match_method))
                     total_comparisons += 1
     print("Inquiring them...")
     start = time.time()
->>>>>>> 9d29361 (small fixes)
     if args.no_multiprocessing:  # type: ignore
         pool = multiprocessing.dummy.Pool(
             1,
@@ -365,11 +301,7 @@ def workflow():
         )
 
     results = pool.imap_unordered(compare_srcs, tasks)
-<<<<<<< HEAD
-
-=======
     print('{} cost {} seconds'.format(match_method.value.upper(), time.time() - start))
->>>>>>> 9d29361 (small fixes)
     borrowing_facts: List[Tuple[str, str, float]] = []
 
     tty = sys.stdout.isatty()
